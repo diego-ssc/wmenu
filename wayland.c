@@ -446,8 +446,10 @@ int menu_run(struct menu *menu) {
 	assert(layer_surface != NULL);
 	context->layer_surface = layer_surface;
 
-	uint32_t anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT |
-		ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+	uint32_t anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+	if (menu->width == 0) {
+		anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+	}
 	if (menu->bottom) {
 		anchor |= ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
 	} else {
@@ -455,7 +457,12 @@ int menu_run(struct menu *menu) {
 	}
 
 	zwlr_layer_surface_v1_set_anchor(layer_surface, anchor);
-	zwlr_layer_surface_v1_set_size(layer_surface, 0, menu->height);
+	zwlr_layer_surface_v1_set_margin(layer_surface,
+		menu->bottom ? 0 : menu->y,
+		menu->width == 0 ? menu->x : 0,
+		menu->bottom ? menu->y : 0,
+		menu->x);
+	zwlr_layer_surface_v1_set_size(layer_surface, menu->width, menu->height);
 	zwlr_layer_surface_v1_set_exclusive_zone(layer_surface, -1);
 	zwlr_layer_surface_v1_set_keyboard_interactivity(layer_surface, true);
 	zwlr_layer_surface_v1_add_listener(layer_surface, &layer_surface_listener, context);

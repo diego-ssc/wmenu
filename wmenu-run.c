@@ -24,6 +24,24 @@ static void read_items(struct menu *menu) {
 		}
 		closedir(dir);
 	}
+
+	FILE *fp = popen("/bin/bash -O expand_aliases -c 'source ~/.bashrc >/dev/null 2>&1; compgen -A alias -A function'", "r");
+	if (fp) {
+		char *line = NULL;
+		size_t cap = 0;
+		ssize_t len;
+		while ((len = getline(&line, &cap, fp)) > 0) {
+			if (line[len - 1] == '\n') {
+				line[len - 1] = '\0';
+			}
+			if (line[0] != '\0') {
+				menu_add_item(menu, strdup(line));
+			}
+		}
+		free(line);
+		pclose(fp);
+	}
+
 	menu_sort_and_deduplicate(menu);
 	free(path);
 }
@@ -42,7 +60,11 @@ static void activation_token_done(void *data, struct xdg_activation_token_v1 *ac
 	int pid = fork();
 	if (pid == 0) {
 		setenv("XDG_ACTIVATION_TOKEN", token, true);
-		char *argv[] = {"/bin/sh", "-c", cmd->text, NULL};
+		char *argv[] = {
+			"/bin/bash", "-O", "expand_aliases", "-c",
+			"source ~/.bashrc >/dev/null 2>&1\n eval \"$1\"",
+			"wmenu-run", cmd->text, NULL
+		};
 		execvp(argv[0], (char**)argv);
 	} else {
 		if (cmd->exit) {

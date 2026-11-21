@@ -86,10 +86,11 @@ static bool parse_color(const char *color, uint32_t *result) {
 void menu_getopts(struct menu *menu, int argc, char *argv[]) {
 	const char *usage =
 		"Usage: wmenu [-biPv] [-f font] [-l lines] [-o output] [-p prompt]\n"
-		"\t[-N color] [-n color] [-M color] [-m color] [-S color] [-s color]\n";
+		"\t[-N color] [-n color] [-M color] [-m color] [-S color] [-s color]\n"
+		"\t[-x x] [-y y] [-w width] [-h height]\n";
 
 	int opt;
-	while ((opt = getopt(argc, argv, "bhiPvf:l:o:p:N:n:M:m:S:s:")) != -1) {
+	while ((opt = getopt(argc, argv, "biPvf:l:o:p:N:n:M:m:S:s:x:y:w:h:")) != -1) {
 		switch (opt) {
 		case 'b':
 			menu->bottom = true;
@@ -136,14 +137,25 @@ void menu_getopts(struct menu *menu, int argc, char *argv[]) {
 			}
 			break;
 		case 'S':
-			if (!parse_color(optarg, &menu->selectionbg)) {
+			if (!parse_color(optarg, &menu->selectionbg))
 				fprintf(stderr, "Invalid selection background color: %s", optarg);
-			}
 			break;
 		case 's':
 			if (!parse_color(optarg, &menu->selectionfg)) {
 				fprintf(stderr, "Invalid selection foreground color: %s", optarg);
 			}
+			break;
+		case 'x':
+			menu->x = atoi(optarg);
+			break;
+		case 'y':
+			menu->y = atoi(optarg);
+			break;
+		case 'w':
+			menu->width = atoi(optarg);
+			break;
+		case 'h':
+			menu->height = atoi(optarg);
 			break;
 		default:
 			fprintf(stderr, "%s", usage);
@@ -160,7 +172,7 @@ void menu_getopts(struct menu *menu, int argc, char *argv[]) {
 // Compute menu line height and padding.
 void menu_calc_height(struct menu *menu) {
 	int height = get_font_height(menu->font);
-	menu->line_height = height + 2;
+	menu->line_height = menu->height > 0 ? menu->height : height + 2;
 	menu->height = menu->line_height;
 	if (menu->lines > 0) {
 		if (menu->item_count < (size_t)menu->lines) {

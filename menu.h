@@ -56,6 +56,8 @@ struct menu {
 	cairo_surface_t *test_surface;
 	cairo_t *test_cairo;
 
+	int x;
+	int y;
 	int width;
 	int height;
 	int line_height;
